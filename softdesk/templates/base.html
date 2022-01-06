@@ -1,0 +1,24 @@
+{% load static %}
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link rel="shortcut icon" type="image/png" href="{% static 'img/favicon.ico' %}"/>
+        <link rel="stylesheet" type="text/css" href="{% static '/css/style.css' %}" />
+        <title>SoftDesk - {% block title %} Bienvenue {% endblock %} </title>
+    </head>
+    <body id="{% block bodyId %}genericPage{% endblock %}">
+        <header>
+            <div class="Logo">
+                <p>
+                    <img src="{% static 'img/16004297044411_P7.png' %}" alt="LITReview">
+                </p>
+            </div>
+            <div class="center">SoftDesk</div>
+            <div>
+            </div>
+        </header>
+        <section class="content">
+            {% block content %}{% endblock content %}
+        </section>
+    </body>
+</html>
