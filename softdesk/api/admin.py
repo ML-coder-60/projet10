@@ -3,7 +3,7 @@ from django.contrib import admin
 from api.models import Projects, Issues, Comments, Contributors
 
 class ContributorAdmin(admin.ModelAdmin):
-    list_display = ('contributor','role','project')
+    list_display = ('user','role','project')
 
 admin.site.register(Contributors,ContributorAdmin)
 
@@ -20,6 +20,6 @@ admin.site.register(Issues,IssuesAdmin)
 
 
 class ProjectsAdmin(admin.ModelAdmin):
-    list_display = ('title','type','author')
+    list_display = ('title','type')
 
 admin.site.register(Projects,ProjectsAdmin)

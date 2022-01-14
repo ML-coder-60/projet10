@@ -16,12 +16,24 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-import authentication.views
+from rest_framework import routers
+
+from rest_framework.decorators import action
+
+from api.views import ProjectViewset, UserAPIView, ContributorsViewset, IssuesViewset
+
+# a faire pour les usrls projets
+router = routers.SimpleRouter()
+router.register('projects', ProjectViewset, basename='projects')
+router.register('projects/(?P<id_project>[^/.]+)/users', ContributorsViewset, basename='contributors')
+router.register('projects/(?P<id_project>[^/.]+)/issues', IssuesViewset, basename='contributors')
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('signup/', authentication.views.signup_page, name='signup'),
+    path('signup/', UserAPIView.as_view()),
     path('api-auth/', include('rest_framework.urls')),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh')
+    path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('', include(router.urls))
 ]

@@ -13,7 +13,6 @@ class Projects(models.Model):
     title = models.CharField(max_length=50)
     description = models.CharField(max_length=255)
     type = models.CharField(max_length=15, choices=Type.choices)
-    author = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
     contributor = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         through='Contributors',
@@ -85,16 +84,18 @@ class Contributors(models.Model):
         CREATOR = 'Créateur'
         COLLABORATOR = 'Collaborateur'
 
-    contributor = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     project = models.ForeignKey(to=Projects, on_delete=models.CASCADE)
     permission = models.CharField(max_length=250, choices=Permission.choices, default='Restreint')
     role =  models.CharField(max_length=20, choices=Role.choices, default='Collaborateur')
 
 
     def __str__(self):
-        return self.contributor.email
+        return self.user.email
+
+
 
     class Meta:
-        unique_together = ('contributor','project')
+        unique_together = ('user','project')
         verbose_name = 'collaborateur'
         verbose_name_plural = 'collaborateurs'
