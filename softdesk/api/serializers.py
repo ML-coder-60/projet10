@@ -3,12 +3,10 @@ from api.models import Projects, Contributors, Issues, Comments
 from authentication.models import CustomUser
 
 
-
-
 class CommentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comments
-        fields = ['id', 'description', 'created_time', 'author_id', 'issue_id' ]
+        fields = ['id', 'description', 'created_time', 'author', 'issue' ]
 
 class IssuesDetailSerializer(serializers.ModelSerializer):
     comment = serializers.SerializerMethodField()
@@ -21,9 +19,9 @@ class IssuesDetailSerializer(serializers.ModelSerializer):
                   'priority',
                   'status',
                   'created_time',
-                  'assignee_id',
-                  'author_id',
-                  'project_id',
+                  'assignee',
+                  'author',
+                  'project',
                   'comment'
                   ]
 
@@ -42,9 +40,9 @@ class IssuesListSerializer(serializers.ModelSerializer):
                   'priority',
                   'status',
                   'created_time',
-                  'assignee_id',
-                  'author_id',
-                  'project_id'
+                  'assignee',
+                  'author',
+                  'project'
                   ]
 
 class UsersDetailSerializer(serializers.ModelSerializer):
@@ -57,11 +55,11 @@ class UsersListSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ['email']
 
+
 class ContributorsListSerializer(serializers.ModelSerializer):
-    user = UsersListSerializer()
     class Meta:
         model = Contributors
-        fields = ['id','user', 'permission', 'role']
+        fields = ['id','user', 'project', 'permission', 'role']
 
 class ContributorsDetailSerializer(serializers.ModelSerializer):
     user = UsersDetailSerializer()
@@ -76,7 +74,7 @@ class ProjectsListSerializer(serializers.ModelSerializer):
         fields = ['id','title', 'description', 'type']
 
     def validate_title(self, value):
-        # Nous vérifions que la catégorie existe
+        # Nous vérifions que le projet existe
         if Projects.objects.filter(title=value).exists():
         # En cas d'erreur, DRF nous met à disposition l'exception ValidationError
             raise serializers.ValidationError('Projects already exists')
@@ -95,6 +93,7 @@ class ProjectsDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Projects
         fields = ['id','title', 'description', 'type', 'contributor','issue']
+        depth = 1
 
     def get_contributor(self, instance):
         contributor = Contributors.objects.filter(project_id=instance.id)
@@ -102,7 +101,6 @@ class ProjectsDetailSerializer(serializers.ModelSerializer):
         return serializer.data
 
     def get_issue(self, instance):
-        ic(instance)
         issue = Issues.objects.filter(project_id=instance.id)
         serializer = IssuesDetailSerializer(issue, many=True)
         return serializer.data

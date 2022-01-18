@@ -20,14 +20,22 @@ from rest_framework import routers
 
 from rest_framework.decorators import action
 
-from api.views import ProjectViewset, UserAPIView, ContributorsViewset, IssuesViewset
+from api.views import   ProjectViewset, \
+                        UserAPIView, \
+                        IssuesViewset, \
+                        CommentsViewset, \
+                        ContributorsViewset
 
 # a faire pour les usrls projets
 router = routers.SimpleRouter()
 router.register('projects', ProjectViewset, basename='projects')
-router.register('projects/(?P<id_project>[^/.]+)/users', ContributorsViewset, basename='contributors')
-router.register('projects/(?P<id_project>[^/.]+)/issues', IssuesViewset, basename='contributors')
-
+router.register('projects/(?P<id_project>[^/.]+)/users', ContributorsViewset, basename='users')
+router.register('projects/(?P<id_project>[^/.]+)/issues', IssuesViewset, basename='issues')
+router.register(
+    'projects/(?P<id_project>[^/.]+)/issues/(?P<id_issue>[^/.]+)/comments',
+    CommentsViewset,
+    basename='comments'
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),

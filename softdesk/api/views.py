@@ -22,17 +22,24 @@ from api.serializers import ProjectsDetailSerializer, \
                             IssuesDetailSerializer, \
                             IssuesListSerializer,\
                             UsersDetailSerializer, \
-                            UsersListSerializer
+                            UsersListSerializer, \
+                            CommentsSerializer
 
 from django.db.models import Q
 
-from icecream import ic
+
+class MultipleSerializerMixin():
+    detail_serializer_class = None
+    def get_serializer_class(self):
+        if self.action == 'retrieve' and self.detail_serializer_class is not None:
+            return self.detail_serializer_class
+        return super().get_serializer_class()
+
 
 class UserAPIView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
     permission_classes = (AllowAny,)
-
 
 
 class ProjectViewset(
@@ -41,6 +48,7 @@ class ProjectViewset(
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
+    MultipleSerializerMixin,
     viewsets.GenericViewSet):
 
     serializer_class = ProjectsListSerializer
@@ -69,79 +77,57 @@ class ProjectViewset(
         )
         return projects
 
-    def get_serializer_class(self):
-        if self.action == 'retrieve':
-            return  self.detail_serializer_class
-        return super().get_serializer_class()
-
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
-        project = Projects.objects.filter(title=request.data['title'])[0]
-
-        Contributors.objects.create(
-            role="Créateur",
-            permission= "Créateur",
-            project= project,
-            user=self.request.user)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    #@action(methods=['get'], detail=True, permission_classes=[IsAuthenticated,])
-    #def users(self, request, pk=None):
-    #    #user = ContributorViewset(request).get_queryset()
-    #    contribs = Contributors.objects.filter(project_id=pk)
-    #    serializer =  ContributorsListSerializer(contribs, many=True)
-    #    #headers = self.get_success_headers(user.data)
-    #    #return Response(serializer.data, status=status.HTTP_200_OK, headers=headers)
-    #    #return Response([contrib.permission for contrib in contribs])
-    #    return Response(serializer.data)
-
-class ContributorsViewset(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet):
-
-    serializer_class = ContributorsListSerializer
-    detail_serializer_class = ContributorsDetailSerializer
-
-    permission_classes = [IsAuthenticated, ]
-
-    def get_serializer_class(self):
-        if self.action == 'retrieve':
-            return  self.detail_serializer_class
-        return super().get_serializer_class()
-
-
-    def get_queryset(self, **kwargs):
-        print(self.kwargs)
-        return Contributors.objects.filter(project_id=self.kwargs['id_project'])
-
-#class UsersViewset(mixins.CreateModelMixin,
-#    mixins.ListModelMixin,
-#    mixins.RetrieveModelMixin,
-#    mixins.DestroyModelMixin,
-#    viewsets.GenericViewSet):
-
-#    serializer_class = UsersSerializer
-#    permission_classes = [IsAuthenticated, ]
-
-#    def get_queryset(self):
-#        return CustomUser.objects.all()
+        contributor = {
+            "role": 'Créateur',
+            "permission": "Créateur",
+            "project": Projects.objects.get(title=request.data['title']).id,
+            "user": self.request.user.id
+        }
+        serializer = ContributorsViewset.serializer_class(data=contributor)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class IssuesViewset(ModelViewSet):
 
-    serializer_class = IssuesListSerializer
+    serializer_class = IssuesDetailSerializer
     detail_serializer_class = IssuesDetailSerializer
     permission_classes = [IsAuthenticated, ]
 
-    def get_serializer_class(self):
-        if self.action == 'retrieve':
-            return  self.detail_serializer_class
-        return super().get_serializer_class()
+    def get_queryset(self, **kwargs):
+        print('test')
+        return Issues.objects.filter(project_id=self.kwargs['id_project'])
 
-    def get_queryset(self):
-        return Issues.objects.all()
+class CommentsViewset(ModelViewSet):
+
+    serializer_class = CommentsSerializer
+    permission_classes = [IsAuthenticated, ]
+
+    def get_queryset(self, **kwargs):
+        return Comments.objects.filter(issue_id=self.kwargs['id_issue'])
+
+
+class ContributorsViewset(MultipleSerializerMixin,ModelViewSet):
+    serializer_class = ContributorsListSerializer
+    detail_serializer_class = ContributorsDetailSerializer
+    permission_classes = [IsAuthenticated, ]
+
+
+    def get_queryset(self, **kwargs):
+        return Contributors.objects.filter(project_id=self.kwargs['id_project'])
+
+    def create(self, request, **kwargs):
+        self.request.data._mutable = True
+        self.request.data['project'] =  self.kwargs['id_project']
+        serializer = ContributorsViewset.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
