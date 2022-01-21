@@ -24,9 +24,11 @@ from api.views import   ProjectViewset, \
                         UserAPIView, \
                         IssuesViewset, \
                         CommentsViewset, \
-                        ContributorsViewset
+                        ContributorsViewset, \
+                        CustomTokenObtainPairView
 
-# a faire pour les usrls projets
+
+
 router = routers.SimpleRouter()
 router.register('projects', ProjectViewset, basename='projects')
 router.register('projects/(?P<id_project>[^/.]+)/users', ContributorsViewset, basename='users')
@@ -41,7 +43,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('signup/', UserAPIView.as_view()),
     path('api-auth/', include('rest_framework.urls')),
-    path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('', include(router.urls))
 ]

@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from api.models import Projects, Contributors, Issues, Comments
 from authentication.models import CustomUser
-
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.db.models import Q
 
 class CommentsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -60,13 +61,23 @@ class ContributorsListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contributors
         fields = ['id','user', 'project', 'permission', 'role']
+        read_only = ['permission', 'role']
+
+    def validate(self, data):
+        """ Check that there is only one creator per project """
+        if 'Créateur' in data.values():
+            if data['role'] == 'Créateur':
+                if Contributors.objects.filter( Q(project=data['project']) & Q(role='Créateur')).exists():
+                    raise serializers.ValidationError(
+                        'A user with the creator role already exists for this project')
+        return data
+
 
 class ContributorsDetailSerializer(serializers.ModelSerializer):
     user = UsersDetailSerializer()
     class Meta:
         model = Contributors
         fields = ['id','user', 'project', 'permission', 'role']
-
 
 class ProjectsListSerializer(serializers.ModelSerializer):
     class Meta:
@@ -104,3 +115,12 @@ class ProjectsDetailSerializer(serializers.ModelSerializer):
         issue = Issues.objects.filter(project_id=instance.id)
         serializer = IssuesDetailSerializer(issue, many=True)
         return serializer.data
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        # The default result (access/refresh tokens)
+        data = super(CustomTokenObtainPairSerializer, self).validate(attrs)
+        # Custom data you want to include
+        data.update({'id': self.user.id})
+        # and everything else you want to send in the response
+        return data
