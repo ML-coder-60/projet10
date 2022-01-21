@@ -6,7 +6,7 @@ class Projects(models.Model):
 
     class Type(models.TextChoices):
         BACK_END = 'Back-end'
-        FRONT_END = 'front-end'
+        FRONT_END = 'Front-end'
         IOS = 'IOS'
         ANDROID = 'Android'
 
