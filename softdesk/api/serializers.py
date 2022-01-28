@@ -7,23 +7,15 @@ from django.db.models import Q
 class CommentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comments
-        fields = ['id', 'description', 'created_time', 'author', 'issue' ]
+        fields = ['id', 'description', 'author','issue', 'created_time']
 
 class IssuesDetailSerializer(serializers.ModelSerializer):
     comment = serializers.SerializerMethodField()
     class Meta:
         model = Issues
-        fields = ['id',
-                  'title',
-                  'desc',
-                  'tag',
-                  'priority',
-                  'status',
-                  'created_time',
-                  'assignee',
-                  'author',
-                  'project',
-                  'comment'
+        fields = ['id', 'title', 'desc', 'tag', 'priority',
+                  'status', 'created_time', 'assignee',
+                  'author', 'project', 'comment'
                   ]
 
     def get_comment(self, instance):
@@ -34,44 +26,34 @@ class IssuesDetailSerializer(serializers.ModelSerializer):
 class IssuesListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Issues
-        fields = ['id',
-                  'title',
-                  'desc',
-                  'tag',
-                  'priority',
-                  'status',
-                  'created_time',
-                  'assignee',
-                  'author',
-                  'project'
+        fields = ['id', 'title', 'desc', 'tag', 'priority',
+                  'status', 'created_time', 'assignee',
+                  'author', 'project'
                   ]
+
+    def validate(self, data):
+        if Projects.objects.filter(title=data['title'], description=data['desc']).exists():
+            raise serializers.ValidationError('Projects already exists')
+        if data['title'] not in data['desc']:
+            raise serializers.ValidationError('Name must be in description')
+        return data
+
 
 class UsersDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['id','email','first_name','last_name',]
+        fields = ['id','first_name','last_name',]
 
 class UsersListSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['email']
+        fields = ['id']
 
 
 class ContributorsListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contributors
-        fields = ['id','user', 'project', 'permission', 'role']
-        read_only = ['permission', 'role']
-
-    def validate(self, data):
-        """ Check that there is only one creator per project """
-        if 'Créateur' in data.values():
-            if data['role'] == 'Créateur':
-                if Contributors.objects.filter( Q(project=data['project']) & Q(role='Créateur')).exists():
-                    raise serializers.ValidationError(
-                        'A user with the creator role already exists for this project')
-        return data
-
+        fields = ['id','user', 'project', 'permission','role']
 
 class ContributorsDetailSerializer(serializers.ModelSerializer):
     user = UsersDetailSerializer()
@@ -84,14 +66,9 @@ class ProjectsListSerializer(serializers.ModelSerializer):
         model = Projects
         fields = ['id','title', 'description', 'type']
 
-    def validate_title(self, value):
-        # Nous vérifions que le projet existe
-        if Projects.objects.filter(title=value).exists():
-        # En cas d'erreur, DRF nous met à disposition l'exception ValidationError
-            raise serializers.ValidationError('Projects already exists')
-        return value
-
     def validate(self, data):
+        if Projects.objects.filter(title=data['title'], description=data['description']).exists():
+            raise serializers.ValidationError('Projects already exists')
         if data['title'] not in data['description']:
             raise serializers.ValidationError('Name must be in description')
         return data
@@ -104,7 +81,6 @@ class ProjectsDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Projects
         fields = ['id','title', 'description', 'type', 'contributor','issue']
-        depth = 1
 
     def get_contributor(self, instance):
         contributor = Contributors.objects.filter(project_id=instance.id)

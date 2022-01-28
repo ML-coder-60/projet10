@@ -39,17 +39,17 @@ class Issues(models.Model):
         FINISHED = 'Terminé'
 
     class Tag(models.TextChoices):
-        INCIDENT = 'bug'
-        TICKET = 'tâche'
-        CHANGE = 'amélioration'
+        INCIDENT = 'Bug'
+        TICKET = 'Tâche'
+        CHANGE = 'Amélioration'
 
     title = models.CharField(max_length=50)
     desc = models.CharField(max_length=255)
-    tag = models.CharField(max_length=20,choices=Tag.choices, default='amélioration')
+    tag = models.CharField(max_length=20,choices=Tag.choices, default='Amélioration')
     priority = models.CharField(max_length=20, choices=Priority.choices, default='Faible')
     project =  models.ForeignKey(to=Projects, on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=Status.choices, default='A faire')
-    created_time = models.DateTimeField()
+    created_time = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='authors')
     assignee = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 

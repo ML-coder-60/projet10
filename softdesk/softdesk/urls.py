@@ -20,6 +20,7 @@ from rest_framework import routers
 
 from rest_framework.decorators import action
 
+from authentication.views import ChangePasswordView
 from api.views import   ProjectViewset, \
                         UserAPIView, \
                         IssuesViewset, \
@@ -27,23 +28,22 @@ from api.views import   ProjectViewset, \
                         ContributorsViewset, \
                         CustomTokenObtainPairView
 
-
-
 router = routers.SimpleRouter()
-router.register('projects', ProjectViewset, basename='projects')
-router.register('projects/(?P<id_project>[^/.]+)/users', ContributorsViewset, basename='users')
-router.register('projects/(?P<id_project>[^/.]+)/issues', IssuesViewset, basename='issues')
+router.register('', ProjectViewset, basename='projects')
+router.register('(?P<id_project>[^/.]+)/users', ContributorsViewset, basename='users')
+router.register('(?P<id_project>[^/.]+)/issues', IssuesViewset, basename='issues')
 router.register(
-    'projects/(?P<id_project>[^/.]+)/issues/(?P<id_issue>[^/.]+)/comments',
+    '(?P<id_project>[^/.]+)/issues/(?P<id_issue>[^/.]+)/comments',
     CommentsViewset,
     basename='comments'
 )
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path('signup/', UserAPIView.as_view()),
-    path('api-auth/', include('rest_framework.urls')),
     path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('', include(router.urls))
+    path('change-password/', ChangePasswordView.as_view(), name='change-password'),
+    path('api-auth/', include('rest_framework.urls')),
+    path('admin/', admin.site.urls),
+    path('projects/', include(router.urls))
 ]
