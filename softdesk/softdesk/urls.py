@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import RedirectView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework import routers
 
@@ -39,11 +40,12 @@ router.register(
 )
 
 urlpatterns = [
+    path('', RedirectView.as_view(url='projects/')),
+    path('projects/', include(router.urls), name='projects'),
     path('signup/', UserAPIView.as_view()),
     path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('change-password/', ChangePasswordView.as_view(), name='change-password'),
     path('api-auth/', include('rest_framework.urls')),
-    path('admin/', admin.site.urls),
-    path('projects/', include(router.urls))
+    path('admin/', admin.site.urls)
 ]

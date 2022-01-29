@@ -209,7 +209,7 @@ class ContributorsViewset(MultipleSerializerMixin,ModelViewSet):
             get_object_or_404(contributors)
 
     def get_permissions(self):
-        if self.action == 'update' or self.action == 'destroy' or self.action == 'create':
+        if self.action == 'destroy' or self.action == 'create':
             composed_perm =  IsAuthenticated & CheckContributor & CanCreateDeleteContributor
             return [composed_perm()]
 

@@ -25,14 +25,16 @@ class CheckContributor(permissions.BasePermission):
             project_id = view.kwargs['pk']
         else:
             return False
-        if CheckInteger().check_int(project_id):
-            if Contributors.objects.filter(Q(project_id=project_id) & Q(user_id=request.user.id)).exists():
-                return True
+        if not CheckInteger().check_int(project_id):
+            return False
+        if Contributors.objects.filter(Q(project_id=project_id) & Q(user_id=request.user.id)).exists():
+             return True
 
 
 class CanUpdateDeleteProject(permissions.BasePermission):
     """
         Check that user has creator role
+
     """
     message = "Vous n'avez pas les droits pour cette action"
 
@@ -41,10 +43,14 @@ class CanUpdateDeleteProject(permissions.BasePermission):
             project_id = view.kwargs['pk']
         else:
             return  False
-        if CheckInteger().check_int(project_id):
-            if Contributors.objects.filter( Q(project_id=project_id) &
-                                            Q(user_id=request.user.id) &
-                                            Q(role='Créateur')).exists():
+        if not CheckInteger().check_int(project_id):
+            return False
+
+        if Contributors.objects.filter(
+                Q(project_id=project_id) &
+                Q(user_id=request.user.id) &
+                Q(role='Créateur')).exists():
+
                 return True
         return False
 
@@ -52,6 +58,7 @@ class CanUpdateDeleteProject(permissions.BasePermission):
 class CanCreateDeleteContributor(permissions.BasePermission):
     """
         Check that user has creator permissions
+        checks that the contributor who is to be deleted is not an author
     """
 
     message = "Vous n'avez pas les droits pour cette action"
@@ -61,11 +68,27 @@ class CanCreateDeleteContributor(permissions.BasePermission):
             id_project = view.kwargs['id_project']
         else:
             return  False
+        if not CheckInteger().check_int(id_project):
+            return False
 
-        if CheckInteger().check_int(id_project):
-            if Contributors.objects.filter( Q(project_id=id_project) &
-                                        Q(user_id=request.user.id) &
-                                        Q(permission='Créateur')).exists():
+        if request.method == 'POST':
+            if Contributors.objects.filter(
+                Q(project_id=id_project) &
+                Q(user_id=request.user.id) &
+                Q(permission='Créateur')).exists():
+                return True
+
+
+        if request.method == 'DELETE':
+            print(request.user.id)
+            print(view.kwargs['pk'])
+            if  Contributors.objects.filter(
+                    Q(project_id=id_project) &
+                    Q(user_id=request.user.id) &
+                    Q(permission='Créateur')).exists() and \
+                Contributors.objects.filter(
+                    Q(id=view.kwargs['pk']) &
+                    Q(role = 'Collaborateur')).exists():
                 return True
         return False
 
@@ -84,11 +107,12 @@ class CanUpdateDeleteIssue(permissions.BasePermission):
         else:
             return False
 
-        if CheckInteger().check_int(id_project) and CheckInteger().check_int(id_issue):
-            if Issues.objects.filter( Q(project_id=id_project) &
+        if not CheckInteger().check_int(id_project) or not CheckInteger().check_int(id_issue):
+            return False
+        if Issues.objects.filter( Q(project_id=id_project) &
                                   Q(author_id=request.user.id) &
                                   Q(id=id_issue)).exists():
-                return True
+            return True
         return False
 
 
@@ -106,9 +130,10 @@ class CanUpdateDeleteComment(permissions.BasePermission):
             id_comment = view.kwargs['pk']
         else:
             return False
-        if CheckInteger().check_int(id_issue) and CheckInteger().check_int(id_comment):
-            if Comments.objects.filter( Q(issue_id=id_issue) &
+        if CheckInteger().check_int(id_issue) or CheckInteger().check_int(id_comment):
+            return False
+        if Comments.objects.filter( Q(issue_id=id_issue) &
                                   Q(author_id=request.user.id) &
                                   Q(id=id_comment)).exists():
-                return True
+            return True
         return False
