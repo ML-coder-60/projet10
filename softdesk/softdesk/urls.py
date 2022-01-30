@@ -16,18 +16,16 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import RedirectView
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework import routers
 
-from rest_framework.decorators import action
-
 from authentication.views import ChangePasswordView
-from api.views import   ProjectViewset, \
-                        UserAPIView, \
-                        IssuesViewset, \
-                        CommentsViewset, \
-                        ContributorsViewset, \
-                        CustomTokenObtainPairView
+from api.views import ProjectViewset, \
+                      UserAPIView, \
+                      IssuesViewset, \
+                      CommentsViewset, \
+                      ContributorsViewset, \
+                      CustomTokenObtainPairView
 
 router = routers.SimpleRouter()
 router.register('', ProjectViewset, basename='projects')

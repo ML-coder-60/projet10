@@ -1,6 +1,5 @@
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
+from rest_framework.viewsets import ModelViewSet
 from django.shortcuts import get_object_or_404
 
 from authentication.serializers import CustomUserSerializer
@@ -18,22 +17,16 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from api.models import Projects, Contributors, Issues, Comments
 from authentication.models import CustomUser
 
-from api.serializers import ProjectsDetailSerializer, \
-                            ProjectsListSerializer, \
-                            ContributorsDetailSerializer, \
-                            ContributorsListSerializer, \
-                            IssuesDetailSerializer, \
-                            IssuesListSerializer,\
-                            UsersDetailSerializer, \
-                            UsersListSerializer, \
-                            CommentsSerializer, \
-                            CustomTokenObtainPairSerializer
+from api.serializers import ProjectsDetailSerializer, ProjectsListSerializer, ContributorsDetailSerializer, \
+                            ContributorsListSerializer, IssuesDetailSerializer, IssuesListSerializer,\
+                            CommentsSerializer, CustomTokenObtainPairSerializer
 
 from django.db.models import Q
 
 
 class MultipleSerializerMixin():
     detail_serializer_class = None
+
     def get_serializer_class(self):
         if self.action == 'retrieve' and self.detail_serializer_class is not None:
             return self.detail_serializer_class
@@ -54,14 +47,9 @@ class UserAPIView(generics.CreateAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ProjectViewset(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
-    MultipleSerializerMixin,
-    viewsets.GenericViewSet):
+class ProjectViewset(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                     mixins.UpdateModelMixin, mixins.DestroyModelMixin, MultipleSerializerMixin,
+                     viewsets.GenericViewSet):
 
     serializer_class = ProjectsListSerializer
     detail_serializer_class = ProjectsDetailSerializer
@@ -86,11 +74,10 @@ class ProjectViewset(
 
     def get_permissions(self):
         if self.action == 'update' or self.action == 'destroy':
-            composed_perm =  IsAuthenticated & CheckContributor & CanUpdateDeleteProject
+            composed_perm = IsAuthenticated & CheckContributor & CanUpdateDeleteProject
             return [composed_perm()]
 
         return super().get_permissions()
-
 
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -109,24 +96,24 @@ class ProjectViewset(
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class IssuesViewset(MultipleSerializerMixin,ModelViewSet):
+
+class IssuesViewset(MultipleSerializerMixin, ModelViewSet):
 
     serializer_class = IssuesListSerializer
     detail_serializer_class = IssuesDetailSerializer
-    permission_classes = [ IsAuthenticated, CheckContributor ]
+    permission_classes = [IsAuthenticated, CheckContributor]
 
     def get_permissions(self):
         if self.action == 'update' or self.action == 'destroy':
-            composed_perm =  IsAuthenticated & CheckContributor & CanUpdateDeleteIssue
+            composed_perm = IsAuthenticated & CheckContributor & CanUpdateDeleteIssue
             return [composed_perm()]
 
         return super().get_permissions()
 
-
     def create(self, request, **kwargs):
         if request.data:
             request.data._mutable = True
-        request.data['author'] =  self.request.user.id
+        request.data['author'] = self.request.user.id
         request.data['project'] = self.kwargs['id_project']
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
@@ -145,18 +132,18 @@ class IssuesViewset(MultipleSerializerMixin,ModelViewSet):
         issue.save()
         return Response(serializer.data)
 
-
     def get_queryset(self, **kwargs):
         issues = Issues.objects.filter(project_id=self.kwargs['id_project'])
-        if issues.count() >=1:
-            return  issues
+        if issues.count() >= 1:
+            return issues
         else:
             get_object_or_404(issues)
+
 
 class CommentsViewset(ModelViewSet):
 
     serializer_class = CommentsSerializer
-    permission_classes = [IsAuthenticated,CheckContributor]
+    permission_classes = [IsAuthenticated, CheckContributor]
 
     def get_permissions(self):
         if self.action == 'update' or self.action == 'destroy':
@@ -166,12 +153,11 @@ class CommentsViewset(ModelViewSet):
         return super().get_permissions()
 
     def get_queryset(self, **kwargs):
-        comments =  Comments.objects.filter(issue_id=self.kwargs['id_issue'])
-        if comments.count() >=1:
-            return  comments
+        comments = Comments.objects.filter(issue_id=self.kwargs['id_issue'])
+        if comments.count() >= 1:
+            return comments
         else:
             get_object_or_404(comments)
-
 
     def create(self, request, **kwargs):
         if request.data:
@@ -194,23 +180,23 @@ class CommentsViewset(ModelViewSet):
         return Response(serializer.data)
 
 
-class ContributorsViewset(MultipleSerializerMixin,ModelViewSet):
+class ContributorsViewset(MultipleSerializerMixin, ModelViewSet):
 
     serializer_class = ContributorsListSerializer
     detail_serializer_class = ContributorsDetailSerializer
 
-    permission_classes = [IsAuthenticated,CheckContributor]
+    permission_classes = [IsAuthenticated, CheckContributor]
 
     def get_queryset(self, **kwargs):
         contributors = Contributors.objects.filter(project_id=self.kwargs['id_project'])
-        if contributors.count() >=1:
-            return  contributors
+        if contributors.count() >= 1:
+            return contributors
         else:
             get_object_or_404(contributors)
 
     def get_permissions(self):
         if self.action == 'destroy' or self.action == 'create':
-            composed_perm =  IsAuthenticated & CheckContributor & CanCreateDeleteContributor
+            composed_perm = IsAuthenticated & CheckContributor & CanCreateDeleteContributor
             return [composed_perm()]
 
         return super().get_permissions()
@@ -218,7 +204,7 @@ class ContributorsViewset(MultipleSerializerMixin,ModelViewSet):
     def create(self, request, **kwargs):
         if request.data:
             request.data._mutable = True
-        request.data['project'] =  self.kwargs['id_project']
+        request.data['project'] = self.kwargs['id_project']
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             serializer.save()

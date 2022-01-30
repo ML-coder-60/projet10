@@ -26,6 +26,7 @@ class Projects(models.Model):
     def __str__(self):
         return self.title
 
+
 class Issues(models.Model):
 
     class Priority(models.TextChoices):
@@ -45,9 +46,9 @@ class Issues(models.Model):
 
     title = models.CharField(max_length=50)
     desc = models.CharField(max_length=255)
-    tag = models.CharField(max_length=20,choices=Tag.choices, default='Amélioration')
+    tag = models.CharField(max_length=20, choices=Tag.choices, default='Amélioration')
     priority = models.CharField(max_length=20, choices=Priority.choices, default='Faible')
-    project =  models.ForeignKey(to=Projects, on_delete=models.CASCADE)
+    project = models.ForeignKey(to=Projects, on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=Status.choices, default='A faire')
     created_time = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='authors')
@@ -60,13 +61,14 @@ class Issues(models.Model):
     def __str__(self):
         return self.title
 
+
 class Comments(models.Model):
 
     description = models.TextField(max_length=255)
     created_time = models.DateTimeField(auto_now_add=True)
 
-    author =  models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    issue = models.ForeignKey(to=Issues, on_delete=models.CASCADE )
+    author = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    issue = models.ForeignKey(to=Issues, on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = 'Commentaire'
@@ -74,6 +76,7 @@ class Comments(models.Model):
 
     def __str__(self):
         return self.description
+
 
 class Contributors(models.Model):
     class Permission(models.TextChoices):
@@ -87,13 +90,12 @@ class Contributors(models.Model):
     user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     project = models.ForeignKey(to=Projects, on_delete=models.CASCADE)
     permission = models.CharField(max_length=250, choices=Permission.choices, default='Restreint')
-    role =  models.CharField(max_length=20, choices=Role.choices, default='Collaborateur')
-
+    role = models.CharField(max_length=20, choices=Role.choices, default='Collaborateur')
 
     def __str__(self):
         return self.user.email
 
     class Meta:
-        unique_together = ('user','project')
+        unique_together = ('user', 'project')
         verbose_name = 'collaborateur'
         verbose_name_plural = 'collaborateurs'

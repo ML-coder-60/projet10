@@ -2,15 +2,18 @@ from rest_framework import serializers
 from api.models import Projects, Contributors, Issues, Comments
 from authentication.models import CustomUser
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from django.db.models import Q
+
 
 class CommentsSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Comments
-        fields = ['id', 'description', 'author','issue', 'created_time']
+        fields = ['id', 'description', 'author', 'issue', 'created_time']
+
 
 class IssuesDetailSerializer(serializers.ModelSerializer):
     comment = serializers.SerializerMethodField()
+
     class Meta:
         model = Issues
         fields = ['id', 'title', 'desc', 'tag', 'priority',
@@ -23,7 +26,9 @@ class IssuesDetailSerializer(serializers.ModelSerializer):
         serializer = CommentsSerializer(comment, many=True)
         return serializer.data
 
+
 class IssuesListSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Issues
         fields = ['id', 'title', 'desc', 'tag', 'priority',
@@ -40,31 +45,40 @@ class IssuesListSerializer(serializers.ModelSerializer):
 
 
 class UsersDetailSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = CustomUser
-        fields = ['id','first_name','last_name',]
+        fields = ['id', 'first_name', 'last_name', ]
+
 
 class UsersListSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = CustomUser
         fields = ['id']
 
 
 class ContributorsListSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Contributors
-        fields = ['id','user', 'project', 'permission','role']
+        fields = ['id', 'user', 'project', 'permission', 'role']
+
 
 class ContributorsDetailSerializer(serializers.ModelSerializer):
+
     user = UsersDetailSerializer()
+
     class Meta:
         model = Contributors
-        fields = ['id','user', 'project', 'permission', 'role']
+        fields = ['id', 'user', 'project', 'permission', 'role']
+
 
 class ProjectsListSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Projects
-        fields = ['id','title', 'description', 'type']
+        fields = ['id', 'title', 'description', 'type']
 
     def validate(self, data):
         if Projects.objects.filter(title=data['title'], description=data['description']).exists():
@@ -75,12 +89,12 @@ class ProjectsListSerializer(serializers.ModelSerializer):
 
 
 class ProjectsDetailSerializer(serializers.ModelSerializer):
-    contributor =  serializers.SerializerMethodField()
+    contributor = serializers.SerializerMethodField()
     issue = serializers.SerializerMethodField()
 
     class Meta:
         model = Projects
-        fields = ['id','title', 'description', 'type', 'contributor','issue']
+        fields = ['id', 'title', 'description', 'type', 'contributor', 'issue']
 
     def get_contributor(self, instance):
         contributor = Contributors.objects.filter(project_id=instance.id)
@@ -91,6 +105,7 @@ class ProjectsDetailSerializer(serializers.ModelSerializer):
         issue = Issues.objects.filter(project_id=instance.id)
         serializer = IssuesDetailSerializer(issue, many=True)
         return serializer.data
+
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):

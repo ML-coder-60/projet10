@@ -6,7 +6,9 @@ from django.contrib.auth.base_user import BaseUserManager
 
 
 class CustomUserAdmin(BaseUserManager):
+
     use_in_migrations = True
+
     def _create_user(self, email, password, **extra_fields):
         """
         Create and save a user with the given email, and

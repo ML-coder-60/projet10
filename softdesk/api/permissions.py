@@ -5,11 +5,12 @@ from django.db.models import Q
 
 class CheckInteger():
 
-    def check_int(self,data):
+    def check_int(self, data):
         try:
             return int(data)
         except ValueError:
             return False
+
 
 class CheckContributor(permissions.BasePermission):
     """
@@ -25,10 +26,12 @@ class CheckContributor(permissions.BasePermission):
             project_id = view.kwargs['pk']
         else:
             return False
+
         if not CheckInteger().check_int(project_id):
             return False
+
         if Contributors.objects.filter(Q(project_id=project_id) & Q(user_id=request.user.id)).exists():
-             return True
+            return True
 
 
 class CanUpdateDeleteProject(permissions.BasePermission):
@@ -42,16 +45,15 @@ class CanUpdateDeleteProject(permissions.BasePermission):
         if 'pk' in view.kwargs:
             project_id = view.kwargs['pk']
         else:
-            return  False
+            return False
+
         if not CheckInteger().check_int(project_id):
             return False
 
-        if Contributors.objects.filter(
-                Q(project_id=project_id) &
-                Q(user_id=request.user.id) &
-                Q(role='Créateur')).exists():
-
-                return True
+        if Contributors.objects.filter(Q(project_id=project_id) &
+                                       Q(user_id=request.user.id) &
+                                       Q(role='Créateur')).exists():
+            return True
         return False
 
 
@@ -67,29 +69,21 @@ class CanCreateDeleteContributor(permissions.BasePermission):
         if 'id_project' in view.kwargs:
             id_project = view.kwargs['id_project']
         else:
-            return  False
+            return False
         if not CheckInteger().check_int(id_project):
             return False
 
-        if request.method == 'POST':
-            if Contributors.objects.filter(
-                Q(project_id=id_project) &
-                Q(user_id=request.user.id) &
-                Q(permission='Créateur')).exists():
-                return True
+        if request.method == 'POST' and Contributors.objects.filter(
+                Q(project_id=id_project) & Q(user_id=request.user.id) & Q(permission='Créateur')).exists():
+            return True
 
-
-        if request.method == 'DELETE':
-            print(request.user.id)
-            print(view.kwargs['pk'])
-            if  Contributors.objects.filter(
+        if request.method == 'DELETE' and \
+                Contributors.objects.filter(
                     Q(project_id=id_project) &
                     Q(user_id=request.user.id) &
                     Q(permission='Créateur')).exists() and \
-                Contributors.objects.filter(
-                    Q(id=view.kwargs['pk']) &
-                    Q(role = 'Collaborateur')).exists():
-                return True
+                Contributors.objects.filter(Q(id=view.kwargs['pk']) & Q(role='Collaborateur')).exists():
+            return True
         return False
 
 
@@ -109,10 +103,10 @@ class CanUpdateDeleteIssue(permissions.BasePermission):
 
         if not CheckInteger().check_int(id_project) or not CheckInteger().check_int(id_issue):
             return False
-        if Issues.objects.filter( Q(project_id=id_project) &
-                                  Q(author_id=request.user.id) &
-                                  Q(id=id_issue)).exists():
+
+        if Issues.objects.filter(Q(project_id=id_project) & Q(author_id=request.user.id) & Q(id=id_issue)).exists():
             return True
+
         return False
 
 
@@ -123,17 +117,17 @@ class CanUpdateDeleteComment(permissions.BasePermission):
 
     message = "Vous n'avez pas les droits pour cette action"
 
-
     def has_permission(self, request, view):
         if 'id_issue' in view.kwargs and 'pk' in view.kwargs:
             id_issue = view.kwargs['id_issue']
             id_comment = view.kwargs['pk']
         else:
             return False
+
         if CheckInteger().check_int(id_issue) or CheckInteger().check_int(id_comment):
             return False
-        if Comments.objects.filter( Q(issue_id=id_issue) &
-                                  Q(author_id=request.user.id) &
-                                  Q(id=id_comment)).exists():
+
+        if Comments.objects.filter(Q(issue_id=id_issue) & Q(author_id=request.user.id) & Q(id=id_comment)).exists():
             return True
+
         return False
