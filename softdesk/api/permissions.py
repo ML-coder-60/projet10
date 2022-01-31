@@ -16,6 +16,7 @@ class CheckContributor(permissions.BasePermission):
     """
         Check user is contributor project
     """
+
     message = "Vous n'êtes pas contributeur du projet"
 
     def has_permission(self, request, view):
@@ -39,6 +40,7 @@ class CanUpdateDeleteProject(permissions.BasePermission):
         Check that user has creator role
 
     """
+
     message = "Vous n'avez pas les droits pour cette action"
 
     def has_permission(self, request, view):

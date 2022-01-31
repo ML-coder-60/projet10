@@ -1,30 +1,27 @@
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from django.shortcuts import get_object_or_404
-
 from authentication.serializers import CustomUserSerializer
-
-from rest_framework import generics, status, mixins, viewsets
+from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from api.permissions import CanUpdateDeleteProject, \
-                            CheckContributor, \
-                            CanCreateDeleteContributor, \
-                            CanUpdateDeleteIssue, \
-                            CanUpdateDeleteComment
-
 from rest_framework_simplejwt.views import TokenObtainPairView
-
 from api.models import Projects, Contributors, Issues, Comments
 from authentication.models import CustomUser
+from django.db.models import Q
+
+from api.permissions import CanUpdateDeleteProject, CheckContributor, CanCreateDeleteContributor, \
+                            CanUpdateDeleteIssue, CanUpdateDeleteComment
 
 from api.serializers import ProjectsDetailSerializer, ProjectsListSerializer, ContributorsDetailSerializer, \
                             ContributorsListSerializer, IssuesDetailSerializer, IssuesListSerializer,\
                             CommentsSerializer, CustomTokenObtainPairSerializer
 
-from django.db.models import Q
-
 
 class MultipleSerializerMixin():
+    """
+        Set serializer
+    """
+
     detail_serializer_class = None
 
     def get_serializer_class(self):
@@ -33,26 +30,18 @@ class MultipleSerializerMixin():
         return super().get_serializer_class()
 
 
-class UserAPIView(generics.CreateAPIView):
-    queryset = CustomUser.objects.all()
-    serializer_class = CustomUserSerializer
-    permission_classes = (AllowAny,)
+class ProjectViewset(MultipleSerializerMixin, ModelViewSet):
+    """
+        An endpoint to manage project
+        Permission: User authenticated
+        Methode: GET, POST, HEAD, PUT, DELETE
 
-    def create(self, request):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'id': serializer.instance.id}, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class ProjectViewset(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
-                     mixins.UpdateModelMixin, mixins.DestroyModelMixin, MultipleSerializerMixin,
-                     viewsets.GenericViewSet):
+    """
 
     serializer_class = ProjectsListSerializer
     detail_serializer_class = ProjectsDetailSerializer
+
+    http_method_names = ['get', 'post', 'head', 'put', 'delete']
 
     permission_classes = [IsAuthenticated]
 
@@ -98,10 +87,18 @@ class ProjectViewset(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.Retr
 
 
 class IssuesViewset(MultipleSerializerMixin, ModelViewSet):
+    """
+        An endpoint to manage issues
+        Permission: User authenticated
+        Methode: GET, POST, HEAD, PUT, DELETE
+    """
 
     serializer_class = IssuesListSerializer
     detail_serializer_class = IssuesDetailSerializer
+
     permission_classes = [IsAuthenticated, CheckContributor]
+
+    http_method_names = ['get', 'post', 'head', 'put', 'delete']
 
     def get_permissions(self):
         if self.action == 'update' or self.action == 'destroy':
@@ -141,9 +138,16 @@ class IssuesViewset(MultipleSerializerMixin, ModelViewSet):
 
 
 class CommentsViewset(ModelViewSet):
+    """
+        An endpoint to manage comments
+        Permission: User authenticated
+        Methode: GET, POST, HEAD, PUT, DELETE
+    """
 
     serializer_class = CommentsSerializer
     permission_classes = [IsAuthenticated, CheckContributor]
+
+    http_method_names = ['get', 'post', 'head', 'put', 'delete']
 
     def get_permissions(self):
         if self.action == 'update' or self.action == 'destroy':
@@ -181,11 +185,18 @@ class CommentsViewset(ModelViewSet):
 
 
 class ContributorsViewset(MultipleSerializerMixin, ModelViewSet):
+    """
+        An endpoint to manage comments
+        Permission: User authenticated
+        Methode: GET, POST, HEAD, DELETE
+    """
 
     serializer_class = ContributorsListSerializer
     detail_serializer_class = ContributorsDetailSerializer
 
     permission_classes = [IsAuthenticated, CheckContributor]
+
+    http_method_names = ['get', 'post', 'head', 'delete']
 
     def get_queryset(self, **kwargs):
         contributors = Contributors.objects.filter(project_id=self.kwargs['id_project'])
@@ -213,6 +224,27 @@ class ContributorsViewset(MultipleSerializerMixin, ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class UserAPIView(generics.CreateAPIView):
+    """
+        An endpoint to change create an account
+        Methode POST
+    """
+
+    queryset = CustomUser.objects.all()
+    serializer_class = CustomUserSerializer
+    permission_classes = (AllowAny,)
+
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'id': serializer.instance.id}, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class CustomTokenObtainPairView(TokenObtainPairView):
-    # Replace the serializer with your custom
+    """
+        Replace the serializer with your custom
+    """
     serializer_class = CustomTokenObtainPairSerializer

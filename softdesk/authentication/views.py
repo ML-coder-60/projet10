@@ -7,7 +7,7 @@ from rest_framework.response import Response
 
 class ChangePasswordView(generics.UpdateAPIView):
     """
-    An endpoint for changing password.
+        An endpoint for changing password.
     """
     serializer_class = ChangePasswordCustomUserSerializer
     model = CustomUser

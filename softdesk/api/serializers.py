@@ -37,10 +37,14 @@ class IssuesListSerializer(serializers.ModelSerializer):
                   ]
 
     def validate(self, data):
+        """
+            Check that title and description exist
+            Check that title must be in description
+        """
         if Projects.objects.filter(title=data['title'], description=data['desc']).exists():
-            raise serializers.ValidationError('Projects already exists')
+            raise serializers.ValidationError('Issues already exists')
         if data['title'] not in data['desc']:
-            raise serializers.ValidationError('Name must be in description')
+            raise serializers.ValidationError('Name issues must be in description')
         return data
 
 
@@ -81,14 +85,19 @@ class ProjectsListSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'description', 'type']
 
     def validate(self, data):
+        """
+            Check that title and description exist
+            Check that title must be in description
+        """
         if Projects.objects.filter(title=data['title'], description=data['description']).exists():
             raise serializers.ValidationError('Projects already exists')
         if data['title'] not in data['description']:
-            raise serializers.ValidationError('Name must be in description')
+            raise serializers.ValidationError('Name project must be in description')
         return data
 
 
 class ProjectsDetailSerializer(serializers.ModelSerializer):
+
     contributor = serializers.SerializerMethodField()
     issue = serializers.SerializerMethodField()
 
@@ -108,10 +117,11 @@ class ProjectsDetailSerializer(serializers.ModelSerializer):
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+
     def validate(self, attrs):
-        # The default result (access/refresh tokens)
+        """
+            Modify the return of TokenObtainPairSerializer ( adding id user)
+        """
         data = super(CustomTokenObtainPairSerializer, self).validate(attrs)
-        # Custom data you want to include
         data.update({'id': self.user.id})
-        # and everything else you want to send in the response
         return data

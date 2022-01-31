@@ -6,6 +6,9 @@ from django.contrib.auth.base_user import BaseUserManager
 
 
 class CustomUserAdmin(BaseUserManager):
+    """
+        Custom UserAdmin field
+    """
 
     use_in_migrations = True
 
@@ -45,6 +48,10 @@ class CustomUserAdmin(BaseUserManager):
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
+    """
+        Custom User field and permission
+    """
+
     username = None
     email = models.EmailField(_('email address'), max_length=255, blank=False, unique=True)
     first_name = models.CharField(_('first name'), max_length=30, blank=True, )
