@@ -31,9 +31,9 @@ Seuls les utilisateurs authentifiés doivent être en mesure d'accéder à quoi 
 ### Récupérer les sources du projet 
 Tapez les commandes suivantes : 
 
-`$ git clone https://github.com/ML-coder-60/projet9.git`
+`$ git clone https://github.com/ML-coder-60/projet10.git`
 
-`$ cd  projet9`
+`$ cd  projet10`
 
 ### Installation/initialisation de l'environnement virtuel
  
